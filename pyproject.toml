@@ -1,0 +1,61 @@
+# Guide (user-friendly):
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+
+# Specification (technical, formal):
+# https://packaging.python.org/en/latest/specifications/pyproject-toml/
+
+
+# Choosing a build backend:
+# https://packaging.python.org/en/latest/tutorials/packaging-projects/#choosing-a-build-backend
+[build-system]
+requires = ["setuptools>=38.3.0", "wheel", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "liger_iris_drp_resources/_version.py"
+version_scheme = "post-release"
+
+[project]
+name = "liger_iris_drp_resources"
+dynamic = ["version"]
+description = "Extra data resources for the Liger IRIS Data Reduction Pipeline (DRP; liger_iris_pipeline) and Data Simulator (liger_iris_sim)."
+readme = "README.md"
+requires-python = ">=3.12"
+
+license = {file = "LICENSE.md"}
+
+authors = [
+  {name = "Bryson Cale", email = "brcale@ucsd.edu" },
+]
+
+maintainers = [
+  {name = "Bryson Cale", email = "brcale@ucsd.edu" },
+]
+
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  # "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = [
+  "numpy>=2",
+  "astropy>=7",
+]
+
+[project.optional-dependencies]
+docs = ["sphinx==8.1.3", "nbsphinx", "pandoc", "sphinx-multiversion", "sphinxawesome-theme"]
+
+[project.urls]
+"Documentation" = "https://astrobc1.github.io/liger_iris_drp_resources"
+"Source" = "https://github.com/astrobc1/liger_iris_drp_resources"
+
+[tool.setuptools]
+packages = ["liger_iris_drp_resources"]
+package-data = {"filters" = ["liger_iris_drp_resources/resources/filters/*"], "gratings" = ["liger_iris_drp_resources/resources/gratings/*"], "throughput" = ["liger_iris_drp_resources/resources/throughput/*"]}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--rootdir=."
