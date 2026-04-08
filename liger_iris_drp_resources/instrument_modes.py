@@ -5,6 +5,11 @@ import astropy.table
 
 from .filters import load_filters_summary
 
+__all__ = [
+    'make_liger_modes_table',
+    'make_iris_modes_table'
+]
+
 gratings_lenslet = [
     'Z4000', 'Y4000', 'J4000', 'H4000', 'K4000', 'YJ4000', 'HK4000',
     'Z8000', 'Y8000', 'J8000', 'H8000', 'K8000', 'K8000a', 'K8000b',

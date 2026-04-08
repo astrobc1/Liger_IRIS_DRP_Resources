@@ -14,6 +14,7 @@ __all__ = [
     'load_liger_psf',
     'load_iris_psf',
     'download_liger_psfs',
+    'download_iris_psfs',
 ]
 
 ####################
@@ -23,13 +24,21 @@ __all__ = [
 def _get_liger_psf_dir() -> str:
     return os.path.join(get_resource_dir(), 'PSFs/Liger')
 
-def download_liger_psfs(output_dir: str | None = None) -> str:
+def download_liger_psfs(
+    output_dir: str | None = None,
+    skip_if_exists: bool = True
+) -> str:
     """
     Download the LIGER PSFs from the Google Drive.
+    
     Parameters
     ----------
     output_dir : str | None
         The directory to save the PSF folder to.
+    skip_if_exists : bool
+        If True, skip downloading if the output directory already exists and is not empty.
+        Default is True.
+    
     Returns
     -------
     str
@@ -37,10 +46,19 @@ def download_liger_psfs(output_dir: str | None = None) -> str:
     """
     if output_dir is None:
         output_dir = _get_liger_psf_dir()
+
+    if skip_if_exists and os.path.exists(output_dir) and any(os.listdir(output_dir)):
+        logger.info(f"PSF directory {output_dir} already exists and is not empty. Skipping download.")
+        return output_dir
+    
     os.makedirs(output_dir, exist_ok=True)
+
     url = 'https://drive.google.com/file/d/1ZW1ePWObhQTJnwZK02EuPwJOxjCf4xbg/view?usp=drive_link'
+
     logger.info(f"Downloading Liger PSFs to {output_dir}...")
+
     temp_zip = gdown.download(url=url, output=os.path.join(output_dir, 'liger_psfs.zip'), quiet=False, fuzzy=True)
+
     if temp_zip is None or not os.path.exists(temp_zip):
         msg = "Failed to download PSFs"
         logger.error(msg)
@@ -200,3 +218,8 @@ def _parse_liger_psf_header(header : fits.Header):
 #### IRIS PSFs ####
 ###################
 
+def download_iris_psfs(
+    output_dir: str | None = None,
+    skip_if_exists: bool = True
+) -> str:
+    raise NotImplementedError("IRIS PSF download not implemented yet")
