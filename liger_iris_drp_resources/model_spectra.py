@@ -19,21 +19,23 @@ def download_model_spectra(output_dir: str | None = None) -> str:
         The directory to download the files to.
         If None, a default directory will be used.
 
-    Returns:
-        str: The path to the downloaded files.
+    Returns
+    -------
+    model_spectra_dir : str
+        The path to the downloaded files.
     """
     if output_dir is None:
         output_dir = _get_model_spectra_dir()
 
     os.makedirs(output_dir, exist_ok=True)
 
-    model_spectra_url = 'https://drive.google.com/drive/folders/1aWN7B4IMsG2c6lV9WVNY3qWsq5C_YIKi?usp=drive_link'
+    url = 'https://drive.google.com/drive/folders/1v_Sy41ZlZFr2C1tg5c28agoAaXo7cR6r?usp=drive_link'
 
-    print(f"Downloading Model spectra to {output_dir}...")
+    logger.info(f"Downloading Model spectra to {output_dir}...")
 
     try:
         files = gdown.download_folder(
-            url=model_spectra_url,
+            url=url,
             output=output_dir,
             quiet=False,
         )

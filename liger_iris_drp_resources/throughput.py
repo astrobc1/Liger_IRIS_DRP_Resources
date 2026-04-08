@@ -82,6 +82,7 @@ def _get_iris_throughput_filename(mode : str) -> str:
 
 def _load_iris_throughputs(
     mode : str,
+    ifs_mode : str | None = None # NOTE: Probably eventually used, so keep for consitent interface
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Load the IRIS throughput curve for the specified modes.

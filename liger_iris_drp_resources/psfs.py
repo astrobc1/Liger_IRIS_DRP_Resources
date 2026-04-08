@@ -4,8 +4,6 @@ import zipfile
 import gdown
 import numpy as np
 from astropy.io import fits
-from astropy.utils.data import _get_download_cache_loc
-import astropy.time
 
 from .utils import get_resource_dir
 
@@ -28,12 +26,10 @@ def _get_liger_psf_dir() -> str:
 def download_liger_psfs(output_dir: str | None = None) -> str:
     """
     Download the LIGER PSFs from the Google Drive.
-
     Parameters
     ----------
     output_dir : str | None
         The directory to save the PSF folder to.
-
     Returns
     -------
     str
@@ -41,36 +37,36 @@ def download_liger_psfs(output_dir: str | None = None) -> str:
     """
     if output_dir is None:
         output_dir = _get_liger_psf_dir()
-
     os.makedirs(output_dir, exist_ok=True)
-
-    url = 'https://drive.google.com/drive/folders/1aWN7B4IMsG2c6lV9WVNY3qWsq5C_YIKi?usp=drive_link'
-    timestamp = astropy.time.Time.now().iso.replace(":", "-").replace(".", "-")
-    temp_zip = os.path.join(output_dir, f"liger_psfs_{timestamp}.zip")
-
+    url = 'https://drive.google.com/file/d/1ZW1ePWObhQTJnwZK02EuPwJOxjCf4xbg/view?usp=drive_link'
     logger.info(f"Downloading Liger PSFs to {output_dir}...")
-
-    gdown.download(url=url, output=temp_zip, quiet=False, fuzzy=True)
-
-    if not os.path.exists(temp_zip):
-        msg = f"Failed to download PSFs: file not found at {temp_zip}"
+    temp_zip = gdown.download(url=url, output=os.path.join(output_dir, 'liger_psfs.zip'), quiet=False, fuzzy=True)
+    if temp_zip is None or not os.path.exists(temp_zip):
+        msg = "Failed to download PSFs"
         logger.error(msg)
         raise RuntimeError(msg)
-
     try:
         with zipfile.ZipFile(temp_zip, 'r') as zip_ref:
             extracted_files = zip_ref.namelist()
-
             if not extracted_files:
                 msg = "Downloaded PSF zip archive is empty"
                 logger.error(msg)
                 raise RuntimeError(msg)
-
+            top_level_names = {
+                f.split('/')[0] for f in extracted_files
+                if 'MACOSX' not in f and not f.startswith('.')
+            }
+            if not top_level_names:
+                msg = "No valid top-level folder found in PSF zip archive"
+                logger.error(msg)
+                raise RuntimeError(msg)
+            if len(top_level_names) > 1:
+                logger.warning(f"Multiple top-level entries found in zip: {top_level_names}. Using first sorted entry.")
+            top_level_folder = sorted(top_level_names)[0]
             zip_ref.extractall(output_dir)
-
-        logger.info(f"Successfully downloaded and extracted Liger PSFs to {output_dir}")
-        return output_dir
-
+        final_dir = os.path.join(output_dir, top_level_folder)
+        logger.info(f"Successfully downloaded and extracted Liger PSFs to {final_dir}")
+        return final_dir
     except zipfile.BadZipFile as e:
         logger.error(f"Downloaded file {temp_zip} is not a valid zip archive: {e}")
         raise RuntimeError("Invalid zip archive for Liger PSFs") from e
@@ -107,15 +103,17 @@ def load_liger_psf(
     # Determine "closest" PSFs in wavelength and position
     xs_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
     ys_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
+
     xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
-    ys = xs_ao[np.argmin(np.abs(ys_ao - ys))]
+    ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+
     liger_psf_filters = ['Y', 'J', 'H', 'K']
     liger_psf_filter_waves = np.array([1020, 1248, 1650, 2124])
     filt = liger_psf_filters[np.argmin(np.abs(liger_psf_filter_waves - wave))]
 
     # Get psf directory
     if psf_dir is None:
-        psf_dir = get_liger_psf_dir()
+        psf_dir = _get_liger_psf_dir()
 
     # Select file from filter and position
     if filt == 'Y':

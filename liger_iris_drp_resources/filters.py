@@ -56,7 +56,7 @@ def download_filter_transmission_curves(output_dir: str | None = None) -> str:
 
     os.makedirs(output_dir, exist_ok=True)
 
-    url = 'https://drive.google.com/drive/folders/1qEq1HgXZV83Xsxu3Xm7DjeoErPPcNr8e?usp=drive_link'
+    url = 'https://drive.google.com/file/d/1C27Eo2XqrIZz1q0Rw7pvuOydVhjxiedy/view?usp=drive_link'
     timestamp = astropy.time.Time.now().iso.replace(":", "-").replace(".", "-")
     temp_zip = os.path.join(output_dir, f"filter_transmission_curves_{timestamp}.zip")
 
@@ -78,7 +78,12 @@ def download_filter_transmission_curves(output_dir: str | None = None) -> str:
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            zip_ref.extractall(output_dir)
+            # Filter out macOS metadata and hidden entries before extracting
+            members = [
+                f for f in extracted_files
+                if 'MACOSX' not in f and not f.startswith('.')
+            ]
+            zip_ref.extractall(output_dir, members=members)
 
         logger.info(f"Successfully downloaded and extracted filter transmission curves to {output_dir}")
         return output_dir
@@ -106,7 +111,8 @@ def load_filter_transmission_curve(filter_name : str):
     trans : np.ndarray
         The transmission curve (0-1).
     """
+    trans_dir = _get_filter_transmission_curves_dir()
     filename = f'iris_filter_trans_{filter_name}.txt'
-    filepath = importlib.resources.files('liger_iris_drp_resources') / f'resources/filters/{filename}'
+    filepath = os.path.join(trans_dir, filename)
     wave, trans = np.loadtxt(filepath, delimiter=',', unpack=True)
     return wave, trans
