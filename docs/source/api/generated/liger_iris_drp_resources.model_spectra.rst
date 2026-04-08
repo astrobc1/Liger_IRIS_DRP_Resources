@@ -1,0 +1,12 @@
+﻿liger\_iris\_drp\_resources.model\_spectra
+==========================================
+
+.. automodule:: liger_iris_drp_resources.model_spectra
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      download_model_spectra
+   
