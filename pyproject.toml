@@ -43,6 +43,7 @@ classifiers = [
 dependencies = [
   "numpy>=2",
   "astropy>=7",
+  "gdown"
 ]
 
 [project.optional-dependencies]
