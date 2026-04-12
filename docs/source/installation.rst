@@ -48,15 +48,10 @@ The local resources directory can be specified with the environment variable
 
 The default location is the result of:
 
-.. literalinclude:: ../../liger_iris_drp_resources/utils.py
-   :language: python
-   :pyobject: get_resource_dir
-
-
 ..code-block:: python
 
   from astropy.utils.data import _get_download_cache_loc
   import os
-  cache_dir = os.path.join(_get_download_cache_loc(), 'LIGER_IRIS_DRP_RESOURCES')
+  resource_dir = os.path.join(_get_download_cache_loc(), 'LIGER_IRIS_DRP_RESOURCES')
 
-This will usually be ``~/LIGER_IRIS_DRP_RESOURCES/``.
+This will usually be ``~/.astropy/cache/download/url/LIGER_IRIS_DRP_RESOURCES/``.

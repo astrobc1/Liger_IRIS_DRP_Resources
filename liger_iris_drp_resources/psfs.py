@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'load_liger_psf',
-    'load_iris_psf',
+    'get_liger_psf',
+    'get_iris_psf',
     'download_liger_psfs',
     'download_iris_psfs',
 ]
@@ -93,9 +93,8 @@ def download_liger_psfs(
             os.remove(temp_zip)
 
 
-def load_liger_psf(
+def get_liger_psf(
     wave : float, xs : float, ys : float,
-    psf_dir : str | None = None
 ) -> tuple[np.ndarray, dict]:
     """
     Load a LIGER PSF for a given wavelength and position.
@@ -108,9 +107,6 @@ def load_liger_psf(
         The x position in arcseconds.
     ys : float
         The y position in arcseconds.
-    psfdir : str | None
-        The directory containing the PSF files.
-        Defaults to the LIGER_IRIS_DRP_DATA_DIR environment variable.
 
     Returns
     -------
@@ -130,8 +126,7 @@ def load_liger_psf(
     filt = liger_psf_filters[np.argmin(np.abs(liger_psf_filter_waves - wave))]
 
     # Get psf directory
-    if psf_dir is None:
-        psf_dir = _get_liger_psf_dir()
+    psf_dir = _get_liger_psf_dir()
 
     # Select file from filter and position
     if filt == 'Y':
@@ -218,8 +213,204 @@ def _parse_liger_psf_header(header : fits.Header):
 #### IRIS PSFs ####
 ###################
 
+def _get_iris_psf_dir() -> str:
+    return os.path.join(get_resource_dir(), 'PSFs/IRIS')
+
 def download_iris_psfs(
     output_dir: str | None = None,
     skip_if_exists: bool = True
 ) -> str:
     raise NotImplementedError("IRIS PSF download not implemented yet")
+
+
+
+def get_iris_psf(
+    mode : str,
+    wave : float,
+    xs : float = 0, ys : float = 0,
+    itime : float = 300,
+    zenith : str = '45',
+    atm : str = '50',
+):
+    """
+    Get the IRIS PSF for the imager or IFS for the given input parameters.
+
+    Parameters
+    ----------
+    mode : str
+        The mode ('img', 'ifs').
+    wave : float
+        The wavelength in microns.
+    xs : float
+        The x offset in arcsec from on-axis. Default is 0.
+    ys : float
+        The y offset in arcsec from on-axis. Default is 0.
+    itime : float
+        The integration time in seconds. Default is 300.
+    zenith : str
+        The zenith angle in degrees. Default is '45'.
+    atm : str
+        The atmosphere in percentile. Default is '50'.
+
+    Returns
+    -------
+    psf : np.ndarray
+        The PSF image.
+    info : dict
+        The PSF info from the header.
+    """
+    filename = _get_iris_psf_filename(
+        mode,
+        xs=xs, ys=ys,
+        itime=itime,
+        zenith=zenith,
+        atm=atm,
+    )
+    filepath = os.path.join(_get_iris_psf_dir(), filename)
+    psf, info = _read_iris_psf(filepath, wave=wave)
+    info['mode'] = mode
+    return psf, info
+    
+
+def _get_iris_psf_filename(
+    mode : str,
+    xs : float = 0, ys : float = 0,
+    itime : float = 300,
+    zenith : str = '45', atm : str = '50',
+) -> str:
+    """
+    Gets the filename of the PSF for the imager or IFS.
+
+    Parameters
+    ----------
+    mode: str
+        The mode ('img', 'ifs').
+    xs : float
+        The x offset in arcsec from on-axis.
+    ys : float
+        The y offset in arcsec from on-axis.
+    itime : float
+        The integration time in seconds.
+    zenith : str
+        The zenith angle in degrees.
+    atm : str
+        The atmosphere in percentile.
+
+    Returns
+    -------
+    filename : str
+        The filename of the PSF.
+    """
+
+    # Resolve input params
+    mode = mode.lower()
+    itimes = np.array([1.4, 300])
+    k = np.argmin(np.abs(itimes - itime))
+    itime = itimes[k]
+    if itime == int(itime):
+        itime = int(itime)
+    zenith = int(zenith)
+
+    # Determine filename based on input parameters
+    if mode == 'img':
+        xs_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
+        ys_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
+        xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+        ys = xs_ao[np.argmin(np.abs(ys_ao - ys))]
+        if xs == int(xs):
+            xs = int(xs)
+        if ys == int(ys):
+            ys = int(ys)
+        filename = f"za{zenith}_{int(atm)}p_im_{itime}s{os.sep}evlpsfcl_1_x{xs}_y{ys}_2mas.fits"
+    elif mode == 'ifs':
+        filename = f"za{zenith}_{int(atm)}p_ifu_{itime}s{os.sep}evlpsfcl_1_x0_y0_2mas.fits"
+    else:
+        raise ValueError(f"Unknown mode '{mode}'.")
+    return filename
+
+
+def _read_iris_psf(
+    filepath : str,
+    hdunum : int | None = None,
+    wave : float | None = None
+) -> tuple[np.ndarray, dict]:
+    """
+    Read the IRIS PSF file and return the PSF array and metadata.
+    """
+    if hdunum is None:
+        hdunum = _get_iris_psf_hdu_for_wavelength(filepath, wave)
+    with fits.open(filepath) as hdulist:
+        psf = hdulist[hdunum].data
+        info = _parse_iris_psf_header(hdulist[hdunum].header)
+        info['filename'] = filepath
+        info['hdunum'] = hdunum
+        info['atm'] = filepath.split('/')[-2][2:4]
+        info['weather'] = filepath.split('/')[-2][5:7]
+    return psf, info
+
+
+def _get_iris_psf_hdu_for_wavelength(filepath : str, wave : float) -> int:
+    """
+    Get the HDU number for a given wavelength in microns.
+    """
+    with fits.open(filepath) as hdulist:
+        waves = np.full(len(hdulist), np.nan)
+        for i in range(len(hdulist)):
+            header = hdulist[i].header
+            info = _parse_iris_psf_header(header)
+            waves[i] = info['wavelength']
+        hdunum = np.argmin(np.abs(waves - wave))
+    return hdunum
+
+
+def _parse_iris_psf_header(header : fits.Header) -> dict:
+    """
+    Parse the header of a PSF file.
+    """
+
+    # Split into a list
+    comments = ""
+    for comment in header['COMMENT']:
+        comments += comment.strip()
+    comments = comments.split(';')
+    # Result
+    info = {}
+
+    # Position
+    match = re.search(r'Science PSF at \(([\d.]+),\s*([\d.]+)\)\s*arcsec', comments[0])
+    info['x'] = match[1]
+    info['y'] = match[2]
+
+    # r0
+    match = re.search(r'r0=([\d.]+)', comments[1])
+    info['r0'] = float(match[1])
+
+    # l0
+    match = re.search(r'l0=([\d.]+)', comments[1])
+    info['l0'] = float(match[1])
+
+    # wavelength
+    match = re.search(r'Wavelength:\s*([\d.eE+-]+)m', comments[2])
+    info['wavelength'] = 1E6 * float(match[1]) # convert meters to microns
+
+    # OPD sampling
+    match = re.search(r'OPD Sampling:\s*([\d.]+)m', comments[3])
+    info['opd_sampling'] = 1E6 * float(match[1]) # convert meters to microns
+
+    # fft grid
+    match = re.search(r'FFT Grid:\s*(\d+)x(\d+)', comments[4])
+    info['fft_grid'] = (int(match[1]), int(match[2]))
+
+    # psf sampling
+    match = re.search(r'PSF Sampling:\s*([\d.eE+-]+)\s*arcsec', comments[5])
+    info['psf_sampling'] = float(match[1]) # arcsec
+
+    # Sum
+    match = re.search(r'PSF Sum to:\s*([\d.eE+-]+)', comments[6])
+    info['sum'] = float(match[1])
+
+    # itime
+    match = re.search(r'Exposure:\s*(\d+)s', comments[7])
+    info['itime'] = float(match[1])
+    
+    return info
