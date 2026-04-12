@@ -16,9 +16,14 @@ __all__ = [
     'load_filter_transmission_curve'
 ]
 
-def load_filters_summary() -> dict[str, tuple[np.ndarray, np.ndarray]]:
+def load_filters_summary(filter_name : str | None = None) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     """
     Loads the filters summary file.
+
+    Parameters
+    ----------
+    filter_name : str | None
+        The filter name to load. If None, loads all filters.
 
     Returns
     -------
@@ -30,9 +35,13 @@ def load_filters_summary() -> dict[str, tuple[np.ndarray, np.ndarray]]:
     filename = 'filters_summary.txt'
     filepath = importlib.resources.files('liger_iris_drp_resources') / f'resources/filters/{filename}'
     data = np.genfromtxt(filepath, dtype=None, names=True, delimiter=',', encoding='utf-8')
+    
     out = {}
     for i, filt in enumerate(data['filter']):
         out[filt] = {key : data[key][i] for key in data.dtype.names}
+
+    if filter_name is not None:
+        return out[filter_name]
     return out
 
 def _get_filter_transmission_curves_dir() -> str:

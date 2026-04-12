@@ -1,9 +1,11 @@
 import os
 from astropy.utils.data import _get_download_cache_loc
+import numpy as np
 
 __all__ = [
     'get_resource_dir',
-    'download'
+    'download',
+    'to_little_endian'
 ]
 
 def get_resource_dir():
@@ -63,3 +65,29 @@ def download(
 
     output_dir = get_resource_dir()
     return output_dir
+
+
+def to_little_endian(arr : np.ndarray) -> np.ndarray:
+    """
+    Convert an array to little-endian byte order.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        The input array.
+
+    Returns
+    -------
+    output : np.ndarray
+        The input array with little-endian byte order.
+    """
+    if not isinstance(arr, np.ndarray):
+        arr = np.asarray(arr)
+
+    byteorder = arr.dtype.byteorder
+
+    if byteorder == '<' or (byteorder == '=' and np.little_endian):
+        return arr
+
+    new_dtype = arr.dtype.newbyteorder('<')
+    return arr.byteswap().view(new_dtype)

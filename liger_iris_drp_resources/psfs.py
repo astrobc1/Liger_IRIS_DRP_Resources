@@ -5,7 +5,7 @@ import gdown
 import numpy as np
 from astropy.io import fits
 
-from .utils import get_resource_dir
+from .utils import get_resource_dir, to_little_endian
 
 import logging
 logger = logging.getLogger(__name__)
@@ -92,6 +92,54 @@ def download_liger_psfs(
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
 
+def _get_liger_psf_filename(
+    wave : float, xs : float, ys : float,
+) -> tuple[str, int]:
+    
+    # Determine "closest" PSFs in wavelength and position
+    xs_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
+    ys_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
+
+    xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+    ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+
+    liger_psf_bps = ['Y', 'J', 'H', 'K']
+    liger_psf_filter_waves = np.array([1.02, 1.248, 1.65, 2.124])
+    bp = liger_psf_bps[np.argmin(np.abs(liger_psf_filter_waves - wave))]
+    if bp == 'Y':
+        filename = os.path.join(
+            'PSFs_LTAO_11_09_19',
+            'ltao_7x7_YJHK',
+            'ltao_7_7_hy',
+            f"evlpsfcl_1_x{xs}_y{ys}.fits",
+        )
+        hdunum = 1
+    elif bp == 'J':
+        filename = os.path.join(
+            'PSFs_LTAO_11_09_19',
+            'ltao_7x7_YJHK',
+            'ltao_7_7_kj',
+            f"evlpsfcl_1_x{xs}_y{ys}.fits",
+        )
+        hdunum = 1
+    elif bp == 'H':
+        filename = os.path.join(
+            'PSFs_LTAO_11_09_19',
+            'ltao_7x7_YJHK',
+            'ltao_7_7_hy',
+            f"evlpsfcl_1_x{xs}_y{ys}.fits",
+        )
+        hdunum = 0
+    elif bp == 'K':
+        filename = os.path.join(
+            'PSFs_LTAO_11_09_19',
+            'ltao_7x7_YJHK',
+            'ltao_7_7_hy',
+            f"evlpsfcl_1_x{xs}_y{ys}.fits",
+        )
+        hdunum = 0
+
+    return filename, hdunum
 
 def get_liger_psf(
     wave : float, xs : float, ys : float,
@@ -114,58 +162,14 @@ def get_liger_psf(
         The PSF image and its metadata.
     """
 
-    # Determine "closest" PSFs in wavelength and position
-    xs_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
-    ys_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
-
-    xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
-    ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
-
-    liger_psf_filters = ['Y', 'J', 'H', 'K']
-    liger_psf_filter_waves = np.array([1020, 1248, 1650, 2124])
-    filt = liger_psf_filters[np.argmin(np.abs(liger_psf_filter_waves - wave))]
-
-    # Get psf directory
+    # Get psf filepath and HDU
     psf_dir = _get_liger_psf_dir()
+    filename, hdunum = _get_liger_psf_filename(wave, xs, ys)
+    filepath = os.path.join(psf_dir, filename)
 
-    # Select file from filter and position
-    if filt == 'Y':
-        filename = os.path.join(
-            psf_dir,
-            'LTAO_11_09_19',
-            'ltao_7x7_YJHK',
-            'ltao_7_7_hy',
-            f"evlpsfcl_1_x{xs}_y{ys}.fits",
-        )
-        hdunum = 1
-    elif filt == 'J':
-        filename = os.path.join(
-            psf_dir,
-            'LTAO_11_09_19',
-            'ltao_7x7_YJHK',
-            'ltao_7_7_jk',
-            f"evlpsfcl_1_x{xs}_y{ys}.fits",
-        )
-        hdunum = 1
-    elif filt == 'H':
-        filename = os.path.join(
-            psf_dir,
-            'LTAO_11_09_19',
-            'ltao_7x7_YJHK',
-            'ltao_7_7_hy',
-            f"evlpsfcl_1_x{xs}_y{ys}.fits",
-        )
-        hdunum = 0
-    elif filt == 'K':
-        filename = os.path.join(
-            psf_dir,
-            'LTAO_11_09_19',
-            'ltao_7x7_YJHK',
-            'ltao_7_7_hy',
-            f"evlpsfcl_1_x{xs}_y{ys}.fits",
-        )
-        hdunum = 0
-    psf, info = _read_liger_psf_file(filename, hdunum)
+    # Load PSF
+    psf, info = _read_liger_psf_file(filepath, hdunum)
+
     return psf, info
 
 
@@ -192,6 +196,7 @@ def _read_liger_psf_file(
         psf = psf[1:, :].copy()
     if psf.shape[1] % 2 == 0:
         psf = psf[:, 1:].copy()
+    psf = to_little_endian(psf)
     return psf, info
 
 
@@ -341,6 +346,7 @@ def _read_iris_psf(
         hdunum = _get_iris_psf_hdu_for_wavelength(filepath, wave)
     with fits.open(filepath) as hdulist:
         psf = hdulist[hdunum].data
+        psf = to_little_endian(psf)
         info = _parse_iris_psf_header(hdulist[hdunum].header)
         info['filename'] = filepath
         info['hdunum'] = hdunum
