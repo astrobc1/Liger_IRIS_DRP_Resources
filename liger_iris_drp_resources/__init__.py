@@ -10,10 +10,10 @@ except ImportError:
         __version__ = "unknown"
 
 
-from . import filters
-from . import instrument_modes
-from . import psfs
-from . import throughput
-from . import gratings
-from . import utils
-from . import model_spectra
+from .filters import *
+from .instrument_modes import *
+from .psfs import *
+from .throughput import *
+from .gratings import *
+from .utils import *
+from .model_spectra import *
