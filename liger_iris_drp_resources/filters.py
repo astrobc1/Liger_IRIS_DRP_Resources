@@ -115,7 +115,7 @@ def download_filter_transmission_curves(
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
 
-def load_filter_transmission_curve(filter_name : str):
+def load_filter_transmission_curve(filter_name : str) -> tuple[np.ndarray, np.ndarray]:
     """
     Load the transmission curve for a filter.
 
