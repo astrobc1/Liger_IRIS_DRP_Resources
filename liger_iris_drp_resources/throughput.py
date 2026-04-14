@@ -27,9 +27,9 @@ def load_throughputs(
 ###########################
 
 def _get_liger_throughput_filename(mode : str, ifs_mode : str | None) -> str:
-    if mode == 'img':
+    if mode.lower() == 'img':
         return 'liger_imager_tput.txt'
-    elif mode == 'ifs':
+    elif mode.lower() == 'ifs':
         ifs_mode = ifs_mode.lower()
         if ifs_mode == 'slicer':
             return 'liger_slicer_tput.txt'
@@ -73,9 +73,9 @@ def _load_liger_throughputs(
 ##########################
 
 def _get_iris_throughput_filename(mode : str) -> str:
-    if mode == 'img':
+    if mode.lower() == 'img':
         return 'iris_imager_tput.txt'
-    elif mode == 'ifs':
+    elif mode.lower() == 'ifs':
         return 'iris_ifs_tput.txt'
     else:
         raise ValueError(f"Invalid mode {mode=}")

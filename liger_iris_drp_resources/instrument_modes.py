@@ -24,6 +24,33 @@ gratings_slicer = [
 modes = ['IMG', 'IFS']
 ifs_modes = ['SLICER', 'LENSLET']
 
+def get_fov(size, plate_scale, decimals=2):
+    return (
+        np.round(size[0] * plate_scale / 1000, decimals=decimals),
+        np.round(size[1] * plate_scale / 1000, decimals=decimals)
+    )
+
+COLUMNS = {
+    'MODE': 'U10',
+    'IFS_MODE': 'U10',
+    'GRATING': 'U10',
+    'PLATE_SCALE': 'f4',
+    'FILTER': 'U20',
+    'FOV': object,
+    'NUM_SPATIAL_ELEMENTS': object,
+    'SPECTRAL_RESOLUTION': object,
+    'WAVEMIN': 'f4',
+    'WAVECEN': 'f4',
+    'WAVEMAX': 'f4',
+    'BANDWIDTH': 'f4',
+}
+
+def make_empty_table():
+    t = astropy.table.Table()
+    for k, dt in COLUMNS.items():
+        t[k] = np.array([], dtype=dt)
+    return t
+
 def make_liger_modes_table():
 
     # Filter summary
@@ -73,14 +100,13 @@ def make_liger_modes_table():
     rows = []
     for filt in filter_names_imager:
         rows.append({
-            'MODE' : 'IMAGER',
+            'MODE' : 'IMG',
             'IFS_MODE' : 'None',
             'GRATING' : 'None',
-            'PLATE_SCALE (mas)' : plate_scale_imager,
+            'PLATE_SCALE' : plate_scale_imager,
             'FILTER' : filt,
-            'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
             'FOV' : fov_imager,
-            'NUM_SPATIAL_ELEMENTS' : 'None',
+            'NUM_SPATIAL_ELEMENTS' : detector_size_imager,
             'SPECTRAL_RESOLUTION' : 'None',
             'WAVEMIN' : fd[filt]['wavemin'],
             'WAVECEN' : fd[filt]['wavecenter'],
@@ -88,7 +114,10 @@ def make_liger_modes_table():
             'BANDWIDTH' : fd[filt]['bandwidth']
         })
 
-    modes_imager = astropy.table.Table(rows)
+
+    modes_imager = make_empty_table()
+    for row in rows:
+        modes_imager.add_row(row)
 
     #################################
     #### LENSLET modes for Liger ####
@@ -109,14 +138,13 @@ def make_liger_modes_table():
                     size = (16, 128)
                 elif resolution == 1000:
                     size = (16, 128)
-                fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+                fov = get_fov(size, plate_scale)
                 rows.append({
                     'MODE' : 'IFS',
                     'IFS_MODE' : 'LENSLET',
                     'GRATING' : grating,
-                    'PLATE_SCALE (mas)' : plate_scale,
+                    'PLATE_SCALE' : plate_scale,
                     'FILTER' : filt,
-                    'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
                     'FOV' : fov,
                     'NUM_SPATIAL_ELEMENTS' : size,
                     'SPECTRAL_RESOLUTION' : resolution,
@@ -133,14 +161,13 @@ def make_liger_modes_table():
     # YJ LENSLET SCALE = 14 mas
     plate_scale = 14
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -153,14 +180,13 @@ def make_liger_modes_table():
     # YJ LENSLET SCALE = 31 mas
     plate_scale = 31
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -174,14 +200,13 @@ def make_liger_modes_table():
     # HK LENSLET SCALE = 14 mas
     plate_scale = 14
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -194,14 +219,13 @@ def make_liger_modes_table():
     # HK LENSLET SCALE = 31 mas
     plate_scale = 31
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -211,7 +235,9 @@ def make_liger_modes_table():
         'BANDWIDTH' : 2.412 - 1.572
     })
 
-    modes_lenslet = astropy.table.Table(rows)
+    modes_lenslet = make_empty_table()
+    for row in rows:
+        modes_lenslet.add_row(row)
 
     ################################
     #### SLICER modes for Liger ####
@@ -227,14 +253,13 @@ def make_liger_modes_table():
                     size = (44, 45) if 'bb' in filt else (88, 45)
                 elif resolution == 8000:
                     size = (44, 45)
-                fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+                fov = get_fov(size, plate_scale)
                 rows.append({
                     'MODE' : 'IFS',
                     'IFS_MODE' : 'SLICER',
                     'GRATING' : grating,
-                    'PLATE_SCALE (mas)' : plate_scale,
+                    'PLATE_SCALE' : plate_scale,
                     'FILTER' : filt,
-                    'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
                     'FOV' : fov,
                     'NUM_SPATIAL_ELEMENTS' : size,
                     'SPECTRAL_RESOLUTION' : resolution,
@@ -248,14 +273,13 @@ def make_liger_modes_table():
     # YJ SLICER SCALE = 45 mas
     plate_scale = 45
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
-        'MODE' : 'IMG',
+        'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -268,14 +292,13 @@ def make_liger_modes_table():
     # YJ SLICER SCALE = 88 mas
     plate_scale = 88
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
-        'MODE' : 'IMG',
+        'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -289,14 +312,13 @@ def make_liger_modes_table():
     # HK SLICER SCALE = 45 mas
     plate_scale = 45
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -309,14 +331,13 @@ def make_liger_modes_table():
     # HK SLICER SCALE = 88 mas
     plate_scale = 88
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -326,7 +347,9 @@ def make_liger_modes_table():
         'BANDWIDTH' : 2.412 - 1.572
     })
 
-    modes_slicer = astropy.table.Table(rows)
+    modes_slicer = make_empty_table()
+    for row in rows:
+        modes_slicer.add_row(row)
 
     modes_all = astropy.table.vstack((modes_imager, modes_lenslet, modes_slicer))
 
@@ -356,7 +379,8 @@ def make_iris_modes_table():
         'YN1', 'YN2', 'YN3', 'YN4',
         'JN1', 'JN2', 'JN3', 'JN4',
         'HN1', 'HN2', 'HN3', 'HN4', 'HN5',
-        'KN1', 'KN2', 'KN3', 'KN4', 'KN45', 'KN5',
+        #'KN1', 'KN2', 'KN3', 'KN4', 'KpN45', 'KN5',
+        'KN1', 'KN2', 'KN3', 'KN4', 'KN5',
     ]
 
     # Pixels
@@ -381,11 +405,10 @@ def make_iris_modes_table():
             'MODE' : 'IMG',
             'IFS_MODE' : 'None',
             'GRATING' : 'None',
-            'PLATE_SCALE (mas)' : plate_scale_imager,
+            'PLATE_SCALE' : plate_scale_imager,
             'FILTER' : filt,
-            'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
             'FOV' : fov_imager,
-            'NUM_SPATIAL_ELEMENTS' : 'None',
+            'NUM_SPATIAL_ELEMENTS' : detector_size_imager,
             'SPECTRAL_RESOLUTION' : 'None',
             'WAVEMIN' : fd[filt]['wavemin'],
             'WAVECEN' : fd[filt]['wavecenter'],
@@ -393,7 +416,9 @@ def make_iris_modes_table():
             'BANDWIDTH' : fd[filt]['bandwidth']
         })
 
-    modes_imager = astropy.table.Table(rows)
+    modes_imager = make_empty_table()
+    for row in rows:
+        modes_imager.add_row(row)
 
 
     ################################
@@ -410,7 +435,8 @@ def make_iris_modes_table():
         if grating == 'K8000a':
             filts = ['KN1', 'KN2', 'KN3', 'Kbb']
         if grating == 'K8000b':
-            filts = ['KN4', 'KN4.5', 'KN5', 'Kbb']
+            #filts = ['KN4', 'KN4.5', 'KN5', 'Kbb']
+            filts = ['KN4', 'KN5', 'Kbb']
         for filt in filts:
             for plate_scale in plate_scales_lenslet:
                 if resolution == 4000:
@@ -419,14 +445,13 @@ def make_iris_modes_table():
                     size = (16, 128)
                 elif resolution == 10000:
                     size = (16, 128)
-                fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+                fov = get_fov(size, plate_scale)
                 rows.append({
                     'MODE' : 'IFS',
                     'IFS_MODE' : 'LENSLET',
                     'GRATING' : grating,
-                    'PLATE_SCALE (mas)' : plate_scale,
+                    'PLATE_SCALE' : plate_scale,
                     'FILTER' : filt,
-                    'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
                     'FOV' : fov,
                     'NUM_SPATIAL_ELEMENTS' : size,
                     'SPECTRAL_RESOLUTION' : resolution,
@@ -443,14 +468,13 @@ def make_iris_modes_table():
     # YJ LENSLET SCALE = 4 mas
     plate_scale = 4
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -463,14 +487,13 @@ def make_iris_modes_table():
     # YJ LENSLET SCALE = 9 mas
     plate_scale = 9
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -484,14 +507,13 @@ def make_iris_modes_table():
     # HK LENSLET SCALE = 4 mas
     plate_scale = 4
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -504,14 +526,13 @@ def make_iris_modes_table():
     # HK LENSLET SCALE = 9 mas
     plate_scale = 9
     size = (16, 128)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'LENSLET',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -521,7 +542,9 @@ def make_iris_modes_table():
         'BANDWIDTH' : 2.412 - 1.572
     })
 
-    modes_lenslet = astropy.table.Table(rows)
+    modes_lenslet = make_empty_table()
+    for row in rows:
+        modes_lenslet.add_row(row)
 
     ###############################
     #### SLICER modes for IRIS ####
@@ -537,14 +560,16 @@ def make_iris_modes_table():
                     size = (44, 45) if 'bb' in filt else (88, 45)
                 elif resolution == 8000:
                     size = (44, 45)
-                fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+                fov = (
+                    np.round(size[0] * plate_scale / 1000, decimals=2),
+                    np.round(size[1] * plate_scale / 1000, decimals=2)
+                )
                 rows.append({
                     'MODE' : 'IFS',
                     'IFS_MODE' : 'SLICER',
                     'GRATING' : grating,
-                    'PLATE_SCALE (mas)' : plate_scale,
+                    'PLATE_SCALE' : plate_scale,
                     'FILTER' : filt,
-                    'FILTER_FILE' : os.path.basename(fd[filt]['filterfiles']),
                     'FOV' : fov,
                     'NUM_SPATIAL_ELEMENTS' : size,
                     'SPECTRAL_RESOLUTION' : resolution,
@@ -558,14 +583,13 @@ def make_iris_modes_table():
     # YJ SLICER SCALE = 25 mas
     plate_scale = 25
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -578,14 +602,13 @@ def make_iris_modes_table():
     # YJ SLICER SCALE = 50 mas
     plate_scale = 50
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'YJ4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'YJ',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -599,14 +622,13 @@ def make_iris_modes_table():
     # HK SLICER SCALE = 25 mas
     plate_scale = 25
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -619,14 +641,13 @@ def make_iris_modes_table():
     # HK SLICER SCALE = 50 mas
     plate_scale = 50
     size = (88, 45)
-    fov = (np.round(size[0] * plate_scale / 1000, decimals=2), np.round(size[1] * plate_scale / 1000, decimals=2))
+    fov = get_fov(size, plate_scale)
     rows.append({
         'MODE' : 'IFS',
         'IFS_MODE' : 'SLICER',
         'GRATING' : 'HK4000',
-        'PLATE_SCALE (mas)' : plate_scale,
+        'PLATE_SCALE' : plate_scale,
         'FILTER' : 'HK',
-        'FILTER_FILE' : 'None',
         'FOV' : fov,
         'NUM_SPATIAL_ELEMENTS' : size,
         'SPECTRAL_RESOLUTION' : 4000,
@@ -636,7 +657,9 @@ def make_iris_modes_table():
         'BANDWIDTH' : 2.412 - 1.572
     })
 
-    modes_slicer = astropy.table.Table(rows)
+    modes_slicer = make_empty_table()
+    for row in rows:
+        modes_slicer.add_row(row)
 
     modes_all = astropy.table.vstack((modes_imager, modes_lenslet, modes_slicer))
 

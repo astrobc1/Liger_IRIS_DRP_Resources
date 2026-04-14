@@ -132,7 +132,7 @@ def load_filter_transmission_curve(filter_name : str) -> tuple[np.ndarray, np.nd
         The transmission curve (0-1).
     """
     trans_dir = _get_filter_transmission_curves_dir()
-    filename = f'iris_filter_trans_{filter_name}.txt'
+    filename = f'iris_filter_{filter_name}.txt'
     filepath = os.path.join(trans_dir, filename)
     wave, trans = np.loadtxt(filepath, delimiter=',', unpack=True)
     return wave, trans
