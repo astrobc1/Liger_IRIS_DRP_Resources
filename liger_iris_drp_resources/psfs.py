@@ -11,8 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'get_liger_psf',
-    'get_iris_psf',
+    'load_liger_psf',
+    'load_iris_psf',
     'download_liger_psfs',
     'download_iris_psfs',
 ]
@@ -93,16 +93,41 @@ def download_liger_psfs(
             os.remove(temp_zip)
 
 def _get_liger_psf_filename(
-    wave : float, xs : float, ys : float,
+    mode : str | None = None,
+    wave : float | None = None,
+    xs : float | None = None, ys : float | None = None,
+    xdet : float | None = None, ydet : float | None = None,
 ) -> tuple[str, int]:
     
     # Determine "closest" PSFs in wavelength and position
     xs_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
     ys_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
 
+    if mode == 'img':
+        if xdet is not None and ydet is not None:
+            scale = 0.01 # arcsec/pixel
+            xs = scale * xdet + xs_ao[0]
+            ys = scale * ydet + ys_ao[0]
+            xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+            ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+        elif xs is not None and ys is not None:
+            xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+            ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+        else:
+            xs = 8.8
+            ys = 8.8
+            xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+            ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+    elif mode.lower() == 'ifs':
+        xs = 0
+        ys = 0
+
     xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
     ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
 
+    if wave is None:
+        logger.warning("Warning: No wavelength provided for PSF selection. Defaulting to H-band (1.65 microns).")
+        wave = 1.65 # microns
     liger_psf_bps = ['Y', 'J', 'H', 'K']
     liger_psf_filter_waves = np.array([1.02, 1.248, 1.65, 2.124])
     bp = liger_psf_bps[np.argmin(np.abs(liger_psf_filter_waves - wave))]
@@ -141,20 +166,29 @@ def _get_liger_psf_filename(
 
     return filename, hdunum
 
-def get_liger_psf(
-    wave : float, xs : float, ys : float,
+def load_liger_psf(
+    mode : str | None = None,
+    wave : float | None = None,
+    xs : float | None = None, ys : float | None = None,
+    xdet : float | None = None, ydet : float | None = None,
 ) -> tuple[np.ndarray, dict]:
     """
     Load a LIGER PSF for a given wavelength and position.
 
     Parameters
     ----------
-    wave : float
+    mode : str | None
+        The mode ('img', 'ifs') to determine which PSF to load.
+    wave : float | None
         The wavelength in nanometers.
-    xs : float
+    xs : float | None
         The x position in arcseconds.
-    ys : float
+    ys : float | None
         The y position in arcseconds.
+    xdet : float | None
+        The x detector position in pixels.
+    ydet : float | None
+        The y detector position in pixels.
 
     Returns
     -------
@@ -164,7 +198,10 @@ def get_liger_psf(
 
     # Get psf filepath and HDU
     psf_dir = _get_liger_psf_dir()
-    filename, hdunum = _get_liger_psf_filename(wave, xs, ys)
+    filename, hdunum = _get_liger_psf_filename(
+        mode=mode,
+        wave=wave, xs=xs, ys=ys, xdet=xdet, ydet=ydet
+    )
     filepath = os.path.join(psf_dir, filename)
 
     # Load PSF
@@ -229,10 +266,11 @@ def download_iris_psfs(
 
 
 
-def get_iris_psf(
+def load_iris_psf(
     mode : str,
-    wave : float,
-    xs : float = 0, ys : float = 0,
+    wave : float | None = None,
+    xs : float | None = None, ys : float | None = None,
+    xdet : float | None = None, ydet : float | None = None,
     itime : float = 300,
     zenith : str = '45',
     atm : str = '50',
@@ -246,10 +284,14 @@ def get_iris_psf(
         The mode ('img', 'ifs').
     wave : float
         The wavelength in microns.
-    xs : float
+    xs : float | None
         The x offset in arcsec from on-axis. Default is 0.
-    ys : float
+    ys : float | None
         The y offset in arcsec from on-axis. Default is 0.
+    xdet : float | None
+        The x detector position in pixels. Default is None, which will be converted to xs.
+    ydet : float | None
+        The y detector position in pixels. Default is None, which will be converted to ys.
     itime : float
         The integration time in seconds. Default is 300.
     zenith : str
@@ -279,7 +321,8 @@ def get_iris_psf(
 
 def _get_iris_psf_filename(
     mode : str,
-    xs : float = 0, ys : float = 0,
+    xdet : float | None = None, ydet : float | None = None,
+    xs : float | None = None, ys : float | None = None,
     itime : float = 300,
     zenith : str = '45', atm : str = '50',
 ) -> str:
@@ -290,9 +333,13 @@ def _get_iris_psf_filename(
     ----------
     mode: str
         The mode ('img', 'ifs').
-    xs : float
+    xdet : float | None
+        The x detector position.
+    ydet : float | None
+        The y detector position.
+    xs : float | None
         The x offset in arcsec from on-axis.
-    ys : float
+    ys : float | None
         The y offset in arcsec from on-axis.
     itime : float
         The integration time in seconds.
@@ -318,10 +365,22 @@ def _get_iris_psf_filename(
 
     # Determine filename based on input parameters
     if mode == 'img':
+        scale = 0.004 # arcsec/pixel
         xs_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
         ys_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
-        xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
-        ys = xs_ao[np.argmin(np.abs(ys_ao - ys))]
+        
+        if xdet is not None and ydet is not None:
+            xs = scale * xdet + xs_ao[0]
+            ys = scale * ydet + ys_ao[0]
+            xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+            ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+        elif xs is not None and ys is not None:
+            xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
+            ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
+        else:
+            xs = 8.8
+            ys = 8.8
+        
         if xs == int(xs):
             xs = int(xs)
         if ys == int(ys):
