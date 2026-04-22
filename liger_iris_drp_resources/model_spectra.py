@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     'download_model_spectra',
+    'get_model_spectra_dir',
 ]
 
-def _get_model_spectra_dir() -> str:
+def get_model_spectra_dir() -> str:
     return os.path.join(get_resource_dir(), 'Model_Spectra')
 
 def download_model_spectra(
@@ -35,7 +36,7 @@ def download_model_spectra(
         The path to the downloaded files.
     """
     if output_dir is None:
-        output_dir = _get_model_spectra_dir()
+        output_dir = get_model_spectra_dir()
 
     if skip_if_exists and os.path.exists(output_dir) and any(os.listdir(output_dir)):
         logger.info(f"Model spectra directory {output_dir} already exists and is not empty. Skipping download.")
