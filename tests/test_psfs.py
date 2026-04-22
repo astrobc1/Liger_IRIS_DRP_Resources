@@ -17,7 +17,7 @@ def test_liger_psfs(tmp_path):
     files_kj = os.listdir(os.path.join(psf_dir, 'ltao_7_7_kj'))
     assert len(files_kj) > 0, "Downloaded PSF directory is empty"
 
-    psf, info = load_liger_psf(mode='img', wave=1.65, xs=0, ys=0)
+    psf, info = load_liger_psf(instrument_mode='img', wave=1.65, xs=0, ys=0)
 
 
 # def _test_iris_psfs(tmp_path):

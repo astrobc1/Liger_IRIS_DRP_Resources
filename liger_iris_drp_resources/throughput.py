@@ -4,8 +4,8 @@ import numpy as np
 __all__ = ['load_throughputs']
 
 def load_throughputs(
-    instrument : str,
-    mode : str | None,
+    instrument_name : str,
+    instrument_mode : str | None,
     ifs_mode : str | None = None,
 ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     """
@@ -16,20 +16,23 @@ def load_throughputs(
     dict
         A dictionary containing the throughput curves for each mode and instrument.
     """
-    instrument = instrument.lower()
+    instrument = instrument_name.lower()
     if instrument == 'liger':
-        return _load_liger_throughputs(mode, ifs_mode)
+        return _load_liger_throughputs(instrument_mode, ifs_mode)
     elif instrument == 'iris':
-        return _load_iris_throughputs(mode, ifs_mode)
+        return _load_iris_throughputs(instrument_mode, ifs_mode)
 
 ###########################
 #### Liger Throughputs ####
 ###########################
 
-def _get_liger_throughput_filename(mode : str, ifs_mode : str | None) -> str:
-    if mode.lower() == 'img':
+def _get_liger_throughput_filename(
+    instrument_mode : str,
+    ifs_mode : str | None
+) -> str:
+    if instrument_mode.lower() == 'img':
         return 'liger_imager_tput.txt'
-    elif mode.lower() == 'ifs':
+    elif instrument_mode.lower() == 'ifs':
         ifs_mode = ifs_mode.lower()
         if ifs_mode == 'slicer':
             return 'liger_slicer_tput.txt'
@@ -38,11 +41,11 @@ def _get_liger_throughput_filename(mode : str, ifs_mode : str | None) -> str:
         else:
             raise ValueError(f"Invalid ifs_mode {ifs_mode=}")
     else:
-        raise ValueError(f"Invalid mode {mode=}")
+        raise ValueError(f"Invalid instrument_mode {instrument_mode=}")
 
 
 def _load_liger_throughputs(
-    mode : str,
+    instrument_mode : str,
     ifs_mode : str | None
 ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -50,11 +53,11 @@ def _load_liger_throughputs(
 
     Parameters
     ----------
-    mode : str
-        The mode ('imager', 'ifs').
+    instrument_mode : str
+        The instrument mode ('imager', 'ifs').
     ifs_mode : str | None
-        The IFS mode ('slicer', 'lenslet') if mode is 'ifs'.
-    
+        The IFS mode ('slicer', 'lenslet') if instrument_mode is 'ifs'.
+
     Returns
     -------
     waves_tput : np.ndarray
@@ -62,7 +65,7 @@ def _load_liger_throughputs(
     inst_tput : np.ndarray
         The instrument throughput at each wavelength.
     """
-    filename = _get_liger_throughput_filename(mode, ifs_mode)
+    filename = _get_liger_throughput_filename(instrument_mode, ifs_mode)
     filepath = importlib.resources.files('liger_iris_drp_resources') / f'resources/throughput/{filename}'
     waves_tput, inst_tput = np.loadtxt(filepath, delimiter=',', unpack=True, skiprows=1)
     return waves_tput, inst_tput
@@ -72,16 +75,16 @@ def _load_liger_throughputs(
 #### IRIS Throughputs ####
 ##########################
 
-def _get_iris_throughput_filename(mode : str) -> str:
-    if mode.lower() == 'img':
+def _get_iris_throughput_filename(instrument_mode : str) -> str:
+    if instrument_mode.lower() == 'img':
         return 'iris_imager_tput.txt'
-    elif mode.lower() == 'ifs':
+    elif instrument_mode.lower() == 'ifs':
         return 'iris_ifs_tput.txt'
     else:
-        raise ValueError(f"Invalid mode {mode=}")
+        raise ValueError(f"Invalid instrument_mode {instrument_mode=}")
 
 def _load_iris_throughputs(
-    mode : str,
+    instrument_mode : str,
     ifs_mode : str | None = None # NOTE: Probably eventually used, so keep for consitent interface
 ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -89,10 +92,10 @@ def _load_iris_throughputs(
 
     Parameters
     ----------
-    mode : str
-        The mode ('imager', 'ifs').
+    instrument_mode : str
+        The instrument mode ('imager', 'ifs').
     ifs_mode : str | None
-        The IFS mode ('slicer', 'lenslet') if mode is 'ifs'.
+        The IFS mode ('slicer', 'lenslet') if instrument_mode is 'ifs'.
 
     Returns
     -------
@@ -101,7 +104,7 @@ def _load_iris_throughputs(
     inst_tput : np.ndarray
         The instrument throughput at each wavelength.
     """
-    filename = _get_iris_throughput_filename(mode)
+    filename = _get_iris_throughput_filename(instrument_mode)
     filepath = importlib.resources.files('liger_iris_drp_resources') / f'resources/throughput/{filename}'
     waves_tput, inst_tput = np.loadtxt(filepath, delimiter=',', unpack=True, skiprows=1)
     return waves_tput, inst_tput

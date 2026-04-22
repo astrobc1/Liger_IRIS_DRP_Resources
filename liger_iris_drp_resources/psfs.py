@@ -93,7 +93,7 @@ def download_liger_psfs(
             os.remove(temp_zip)
 
 def _get_liger_psf_filename(
-    mode : str | None = None,
+    instrument_mode : str | None = None,
     wave : float | None = None,
     xs : float | None = None, ys : float | None = None,
     xdet : float | None = None, ydet : float | None = None,
@@ -103,7 +103,7 @@ def _get_liger_psf_filename(
     xs_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
     ys_ao = np.array([-15, -10, -5, 0, 5, 10, 15])
 
-    if mode == 'img':
+    if instrument_mode == 'img':
         if xdet is not None and ydet is not None:
             scale = 0.01 # arcsec/pixel
             xs = scale * xdet + xs_ao[0]
@@ -118,7 +118,7 @@ def _get_liger_psf_filename(
             ys = 8.8
             xs = xs_ao[np.argmin(np.abs(xs_ao - xs))]
             ys = ys_ao[np.argmin(np.abs(ys_ao - ys))]
-    elif mode.lower() == 'ifs':
+    elif instrument_mode.lower() == 'ifs':
         xs = 0
         ys = 0
 
@@ -166,8 +166,9 @@ def _get_liger_psf_filename(
 
     return filename, hdunum
 
+
 def load_liger_psf(
-    mode : str | None = None,
+    instrument_mode : str | None = None,
     wave : float | None = None,
     xs : float | None = None, ys : float | None = None,
     xdet : float | None = None, ydet : float | None = None,
@@ -177,8 +178,8 @@ def load_liger_psf(
 
     Parameters
     ----------
-    mode : str | None
-        The mode ('img', 'ifs') to determine which PSF to load.
+    instrument_mode : str | None
+        The instrument mode ('img', 'ifs') to determine which PSF to load.
     wave : float | None
         The wavelength in nanometers.
     xs : float | None
@@ -199,8 +200,10 @@ def load_liger_psf(
     # Get psf filepath and HDU
     psf_dir = _get_liger_psf_dir()
     filename, hdunum = _get_liger_psf_filename(
-        mode=mode,
-        wave=wave, xs=xs, ys=ys, xdet=xdet, ydet=ydet
+        instrument_mode=instrument_mode,
+        wave=wave,
+        xs=xs, ys=ys,
+        xdet=xdet, ydet=ydet
     )
     filepath = os.path.join(psf_dir, filename)
 
@@ -258,6 +261,7 @@ def _parse_liger_psf_header(header : fits.Header):
 def _get_iris_psf_dir() -> str:
     return os.path.join(get_resource_dir(), 'PSFs/IRIS')
 
+
 def download_iris_psfs(
     output_dir: str | None = None,
     skip_if_exists: bool = True
@@ -265,9 +269,8 @@ def download_iris_psfs(
     raise NotImplementedError("IRIS PSF download not implemented yet")
 
 
-
 def load_iris_psf(
-    mode : str,
+    instrument_mode : str,
     wave : float | None = None,
     xs : float | None = None, ys : float | None = None,
     xdet : float | None = None, ydet : float | None = None,
@@ -280,8 +283,8 @@ def load_iris_psf(
 
     Parameters
     ----------
-    mode : str
-        The mode ('img', 'ifs').
+    instrument_mode : str
+        The instrument mode ('img', 'ifs').
     wave : float
         The wavelength in microns.
     xs : float | None
@@ -307,20 +310,21 @@ def load_iris_psf(
         The PSF info from the header.
     """
     filename = _get_iris_psf_filename(
-        mode,
+        instrument_mode=instrument_mode,
         xs=xs, ys=ys,
+        xdet=xdet, ydet=ydet,
         itime=itime,
         zenith=zenith,
         atm=atm,
     )
     filepath = os.path.join(_get_iris_psf_dir(), filename)
     psf, info = _read_iris_psf(filepath, wave=wave)
-    info['mode'] = mode
+    info['instrument_mode'] = instrument_mode
     return psf, info
     
 
 def _get_iris_psf_filename(
-    mode : str,
+    instrument_mode : str,
     xdet : float | None = None, ydet : float | None = None,
     xs : float | None = None, ys : float | None = None,
     itime : float = 300,
@@ -331,8 +335,8 @@ def _get_iris_psf_filename(
 
     Parameters
     ----------
-    mode: str
-        The mode ('img', 'ifs').
+    instrument_mode: str
+        The instrument mode ('img', 'ifs').
     xdet : float | None
         The x detector position.
     ydet : float | None
@@ -355,7 +359,7 @@ def _get_iris_psf_filename(
     """
 
     # Resolve input params
-    mode = mode.lower()
+    instrument_mode = instrument_mode.lower()
     itimes = np.array([1.4, 300])
     k = np.argmin(np.abs(itimes - itime))
     itime = itimes[k]
@@ -364,7 +368,7 @@ def _get_iris_psf_filename(
     zenith = int(zenith)
 
     # Determine filename based on input parameters
-    if mode == 'img':
+    if instrument_mode == 'img':
         scale = 0.004 # arcsec/pixel
         xs_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
         ys_ao = np.array([0.6, 4.7, 8.8, 12.9, 17])
@@ -386,10 +390,10 @@ def _get_iris_psf_filename(
         if ys == int(ys):
             ys = int(ys)
         filename = f"za{zenith}_{int(atm)}p_im_{itime}s{os.sep}evlpsfcl_1_x{xs}_y{ys}_2mas.fits"
-    elif mode == 'ifs':
+    elif instrument_mode == 'ifs':
         filename = f"za{zenith}_{int(atm)}p_ifu_{itime}s{os.sep}evlpsfcl_1_x0_y0_2mas.fits"
     else:
-        raise ValueError(f"Unknown mode '{mode}'.")
+        raise ValueError(f"Unknown instrument_mode '{instrument_mode}'.")
     return filename
 
 
