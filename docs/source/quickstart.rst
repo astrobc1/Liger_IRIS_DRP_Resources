@@ -48,7 +48,8 @@ A summary table of the filters is included with the package.
 
     # Summary table — dict keyed by filter name
     filters = load_filters_summary()
-    print(filters["K"])  # e.g. {'filter': 'K', 'lambda_min': ..., 'lambda_max': ..., ...}
+    print(filters["K"])
+    # -> {'filter': np.str_('K'), 'wavemin': np.float64(2.0), 'wavecenter': np.float64(2.2), 'wavemax': np.float64(2.4), 'bandwidth': np.float64(0.4), 'backmag': np.float64(15.1028), 'zpphot': np.float64(4564590399.386499), 'transmission_file': np.str_('iris_filter_K.txt')}
 
 
 Filter transmission curves are downloaded from the Google Drive.
@@ -56,9 +57,6 @@ Filter transmission curves are downloaded from the Google Drive.
 .. code-block:: python
 
     from liger_iris_drp_resources.filters import download_filter_transmission_curves, load_filter_transmission_curve
-
-    # Download filter transmission curves
-    download_filter_transmission_curves()
 
     # Transmission curve for a specific filter
     wave, trans = load_filter_transmission_curve("K")
@@ -75,14 +73,14 @@ A summary table of the IFS gratings is included with the package.
 
     gratings = load_gratings_summary()
     print(gratings["K4000"])
-    # {'grating': 'K4000', 'groov_density': 151, 'resolution': 4000,
-    #  'wavemin': 1.975, 'wavemax': 2.412, 'wavecenter': 2.1825, ...}
+    # -> {'grating': np.str_('K4000'), 'groov_density': np.int64(151), 'resolution': np.int64(4000), 'alpha': np.float64(10.3), 'dimension': np.float64(32.801), 'wavemin': np.float64(1.975), 'wavemax': np.float64(2.412), 'wavecenter': np.float64(2.1825)}
 
 
 Model Spectra
 -------------
 
 Model spectra are hosted on Google Drive.
+The data simulator and pipeline use specific files stored here.
 
 .. code-block:: python
 
@@ -101,9 +99,11 @@ IRIS PSFs are not yet available.
 
 .. code-block:: python
 
-    from liger_iris_drp_resources.psfs import download_liger_psfs, load_liger_psf
-
-    download_liger_psfs()
+    from liger_iris_drp_resources.psfs import load_liger_psf
 
     # Load the PSF closest to 1248 nm at position (0", 0")
-    psf, info = load_liger_psf(wave=1248, xs=0, ys=0)
+    psf, info = load_liger_psf(
+        instrument_mode='img', # Instrument mode: 'img' or 'ifs'
+        wave=1.248, # Wavelength in microns
+        xdet=1024, ydet=1024, # Detector coords
+    )
