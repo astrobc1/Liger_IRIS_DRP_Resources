@@ -1,4 +1,4 @@
-from liger_iris_drp_resources import download_liger_psfs, load_liger_psf
+from liger_iris_drp_resources import download_liger_psfs, load_liger_psf, download_keck_pupil_image, load_keck_pupil_image
 import os
 
 def test_liger_psfs(tmp_path):
@@ -19,6 +19,14 @@ def test_liger_psfs(tmp_path):
 
     psf, info = load_liger_psf(instrument_mode='img', wave=1.65, xs=0, ys=0)
 
+def test_keck_pupil(tmp_path):
+    os.environ['LIGER_IRIS_DRP_RESOURCE_DIR'] = str(tmp_path) + '/liger_iris_drp_resources/'
+    
+    download_keck_pupil_image()
+    pupil_image = load_keck_pupil_image()
+
+    import numpy as np
+    assert isinstance(pupil_image, np.ndarray), "Loaded pupil image is not a numpy array"
 
 # def _test_iris_psfs(tmp_path):
     

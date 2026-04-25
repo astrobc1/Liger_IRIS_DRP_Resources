@@ -15,7 +15,86 @@ __all__ = [
     'load_iris_psf',
     'download_liger_psfs',
     'download_iris_psfs',
+    'download_keck_pupil_image',
+    'load_keck_pupil_image'
 ]
+
+############################
+#### Keck Analytic PSFs ####
+############################
+
+def download_keck_pupil_image(
+    output_dir: str | None = None,
+    skip_if_exists: bool = True
+) -> str:
+    """
+    Download the Keck pupil FITS file from Google Drive.
+
+    Parameters
+    ----------
+    output_dir : str | None
+        Directory where the FITS file should be saved.
+    skip_if_exists : bool
+        If True, skip download when the target FITS file already exists
+        and is non-empty.
+
+    Returns
+    -------
+    str
+        Full path to the downloaded Keck pupil FITS file.
+    """
+    if output_dir is None:
+        output_dir = _get_liger_psf_dir()
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    filename = 'keck_pupil.fits'
+    output_path = os.path.join(output_dir, filename)
+
+    if skip_if_exists and os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+        logger.info(f"Keck pupil file {output_path} already exists. Skipping download.")
+        return output_path
+
+    url = 'https://drive.google.com/file/d/1qFT_tHktVf69RAeS09qmgOkz_uyJOd9O/view?usp=drive_link'
+    logger.info(f"Downloading Keck pupil to {output_path}...")
+
+    downloaded_path = gdown.download(
+        url=url,
+        output=output_path,
+        quiet=False,
+    )
+
+    if downloaded_path is None or not os.path.exists(downloaded_path) or os.path.getsize(downloaded_path) == 0:
+        msg = "Failed to download Keck pupil FITS file"
+        logger.error(msg)
+        # Clean up any partial file at the intended output location
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        raise RuntimeError(msg)
+
+    logger.info(f"Successfully downloaded Keck pupil to {downloaded_path}")
+    return downloaded_path
+    
+
+def load_keck_pupil_image() -> np.ndarray:
+    """
+    Load the Keck pupil FITS file and return the pupil image as a numpy array.
+
+    Returns
+    -------
+    np.ndarray
+        The Keck pupil image.
+    """
+    pupil_path = os.path.join(_get_liger_psf_dir(), 'keck_pupil.fits')
+    if not os.path.exists(pupil_path):
+        msg = f"Keck pupil FITS file not found at {pupil_path}. Please run download_keck_pupil_image() first."
+        logger.error(msg)
+        raise FileNotFoundError(msg)
+
+    with fits.open(pupil_path) as hdulist:
+        pupil_image = hdulist[0].data
+    
+    return to_little_endian(pupil_image)
 
 ####################
 #### Liger PSFs ####
@@ -57,7 +136,7 @@ def download_liger_psfs(
 
     logger.info(f"Downloading Liger PSFs to {output_dir}...")
 
-    temp_zip = gdown.download(url=url, output=os.path.join(output_dir, 'liger_psfs.zip'), quiet=False, fuzzy=True)
+    temp_zip = gdown.download(url=url, output=os.path.join(output_dir, 'liger_psfs.zip'), quiet=False)
 
     if temp_zip is None or not os.path.exists(temp_zip):
         msg = "Failed to download PSFs"
