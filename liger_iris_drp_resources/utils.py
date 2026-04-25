@@ -21,6 +21,7 @@ def get_resource_dir():
 def download(
     model_spectra: bool = True,
     liger_psfs: bool = True,
+    keck_pupil: bool = True,
     iris_psfs: bool = False,
     filter_trans: bool = True,
     skip_if_exists: bool = True
@@ -35,6 +36,9 @@ def download(
         Default is True.
     liger_psfs : bool
         Whether to download the Liger PSFs.
+        Default is True.
+    keck_pupil : bool
+        Whether to download the Keck pupil image.
         Default is True.
     iris_psfs : bool
         Whether to download the IRIS PSFs.
@@ -54,6 +58,10 @@ def download(
     if liger_psfs:
         from .psfs import download_liger_psfs
         download_liger_psfs(skip_if_exists=skip_if_exists)
+
+    if keck_pupil:
+        from .psfs import download_keck_pupil_image
+        download_keck_pupil_image(skip_if_exists=skip_if_exists)
 
     if iris_psfs:
         from .psfs import download_iris_psfs
