@@ -82,7 +82,7 @@ def download_filter_transmission_curves(
 
     logger.info(f"Downloading filter transmission curves to {output_dir}...")
 
-    gdown.download(url=url, output=temp_zip, quiet=False, fuzzy=True)
+    gdown.download(url=url, output=temp_zip, quiet=False)
 
     if not os.path.exists(temp_zip):
         msg = f"Failed to download filter transmission curves: file not found at {temp_zip}"
