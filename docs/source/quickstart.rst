@@ -93,7 +93,7 @@ PSFs
 
 Liger PSFs are hosted on Google Drive as a zip archive.
 
-IRIS PSFs are not yet available.
+**IRIS PSFs are only available when running code on the Galactica cluster where IRIS PSFs are stored.**
 
 .. code-block:: python
 
@@ -104,6 +104,20 @@ IRIS PSFs are not yet available.
         instrument_mode='img', # Instrument mode: 'img' or 'ifs'
         wave=1.248, # Wavelength in microns
         xdet=1024, ydet=1024, # Detector coords
+    )
+
+.. code-block:: python
+
+    from liger_iris_drp_resources.psfs import load_iris_psf
+    
+    psf, info = load_iris_psf(
+        instrument_mode='img',
+        wave=1.65,
+        xdet=1024,
+        ydet=1024,
+        itime=300,
+        zenith='45',
+        atm='50'
     )
 
 Micropupils

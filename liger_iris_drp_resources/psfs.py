@@ -338,23 +338,25 @@ def _parse_liger_psf_header(header : fits.Header):
 ###################
 
 SIMDIR = '/data/group/data/iris/sim/'
+IRIS_PSF_ITIMES = np.array([1.4, 300])
 
-def _get_iris_psf_dir(
+def _get_iris_psf_dir() -> str:
+    return os.path.join(SIMDIR, f'psfs')
+
+def _get_iris_psf_subdir(
     instrument_mode : str,
-    itime : float,
-    atm : str,
-    zenith: str,
-) -> str:
-    # za0_25p_im_1.4s
+    itime : float = 300,
+    zenith : str = '45', atm : str = '50'
+):
     instrument_mode = instrument_mode.lower()
     if instrument_mode.lower() == 'img':
         mode = 'im'
     elif instrument_mode.lower() == 'ifs':
         mode = 'ifu'
-    itime_str = ''
-    return os.path.join(SIMDIR, f'psfs/za{zenith}_{int(atm)}p_{instrument_mode}_{itime}s')
-    #return os.path.join(get_resource_dir(), 'PSFs/IRIS')
-
+    psf_itime = IRIS_PSF_ITIMES[np.argmin(np.abs(IRIS_PSF_ITIMES - itime))]
+    if psf_itime == int(psf_itime):
+        psf_itime = int(psf_itime) # 300 not 300.0
+    return f'za{zenith}_{int(atm)}p_{mode}_{psf_itime}s'
 
 # def download_iris_psfs(
 #     output_dir: str | None = None,
@@ -411,7 +413,13 @@ def load_iris_psf(
         zenith=zenith,
         atm=atm,
     )
-    filepath = os.path.join(_get_iris_psf_dir(), filename)
+    psf_subdir = _get_iris_psf_subdir(
+        instrument_mode=instrument_mode,
+        itime=itime,
+        zenith=zenith,
+        atm=atm
+    )
+    filepath = os.path.join(_get_iris_psf_dir(), psf_subdir, filename)
     psf, info = _read_iris_psf(filepath, wave=wave)
     info['instrument_mode'] = instrument_mode
     return psf, info
@@ -454,11 +462,9 @@ def _get_iris_psf_filename(
 
     # Resolve input params
     instrument_mode = instrument_mode.lower()
-    itimes = np.array([1.4, 300])
-    k = np.argmin(np.abs(itimes - itime))
-    itime = itimes[k]
-    if itime == int(itime):
-        itime = int(itime)
+    psf_itime = IRIS_PSF_ITIMES[np.argmin(np.abs(IRIS_PSF_ITIMES - itime))]
+    if psf_itime == int(psf_itime):
+        psf_itime = int(psf_itime) # 300 not 300.0
     zenith = int(zenith)
 
     # Determine filename based on input parameters
@@ -483,9 +489,9 @@ def _get_iris_psf_filename(
             xs = int(xs)
         if ys == int(ys):
             ys = int(ys)
-        filename = f"za{zenith}_{int(atm)}p_im_{itime}s{os.sep}evlpsfcl_1_x{xs}_y{ys}_2mas.fits"
+        filename = f"evlpsfcl_1_x{xs}_y{ys}_2mas.fits"
     elif instrument_mode == 'ifs':
-        filename = f"za{zenith}_{int(atm)}p_ifu_{itime}s{os.sep}evlpsfcl_1_x0_y0_2mas.fits"
+        filename = f"evlpsfcl_1_x0_y0_2mas.fits"
     else:
         raise ValueError(f"Unknown instrument_mode '{instrument_mode}'.")
     return filename
