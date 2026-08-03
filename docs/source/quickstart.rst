@@ -3,8 +3,6 @@ Quickstart
 
 Ensure you have followed the :doc:`installation instructions <../installation>` before proceeding with this quickstart guide.
 
-If any example below requires data from the `Link to Google Drive folder <https://drive.google.com/drive/folders/15vSPi9QRine2F2zhZ7xeSXJF7fMXZdoe?usp=drive_link>`_, it will automatically download the necessary files to the local resources directory.
-
 Examples below assume the user has set the environment variable **LIGER_IRIS_DRP_RESOURCE_DIR** to a valid directory path, or is using the default resources directory.
 
 
@@ -107,3 +105,15 @@ IRIS PSFs are not yet available.
         wave=1.248, # Wavelength in microns
         xdet=1024, ydet=1024, # Detector coords
     )
+
+Micropupils
+-----------
+
+Liger and IRIS lenslet micropupil files are hosted on Google Drive as a zip archive.
+
+.. code-block:: python
+
+    from liger_iris_drp_resources.micropupils import load_micropupil_for_filter
+
+    # Load the micropupil for the K filter
+    mp, filepath = load_micropupil_for_filter(filter_name='KN2')
