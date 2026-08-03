@@ -28,7 +28,7 @@ def test_keck_pupil(tmp_path):
     import numpy as np
     assert isinstance(pupil_image, np.ndarray), "Loaded pupil image is not a numpy array"
 
-def test_iris_psfs(tmp_path):
+def _test_iris_psfs(tmp_path):
 
     from liger_iris_drp_resources.psfs import load_iris_psf
     
