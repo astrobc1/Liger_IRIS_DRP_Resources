@@ -14,7 +14,7 @@ __all__ = [
     'load_liger_psf',
     'load_iris_psf',
     'download_liger_psfs',
-    'download_iris_psfs',
+    #'download_iris_psfs',
     'download_keck_pupil_image',
     'load_keck_pupil_image'
 ]
@@ -337,15 +337,30 @@ def _parse_liger_psf_header(header : fits.Header):
 #### IRIS PSFs ####
 ###################
 
-def _get_iris_psf_dir() -> str:
-    return os.path.join(get_resource_dir(), 'PSFs/IRIS')
+SIMDIR = '/data/group/data/iris/sim/'
 
-
-def download_iris_psfs(
-    output_dir: str | None = None,
-    skip_if_exists: bool = True
+def _get_iris_psf_dir(
+    instrument_mode : str,
+    itime : float,
+    atm : str,
+    zenith: str,
 ) -> str:
-    raise NotImplementedError("IRIS PSF download not implemented yet")
+    # za0_25p_im_1.4s
+    instrument_mode = instrument_mode.lower()
+    if instrument_mode.lower() == 'img':
+        mode = 'im'
+    elif instrument_mode.lower() == 'ifs':
+        mode = 'ifu'
+    itime_str = ''
+    return os.path.join(SIMDIR, f'psfs/za{zenith}_{int(atm)}p_{instrument_mode}_{itime}s')
+    #return os.path.join(get_resource_dir(), 'PSFs/IRIS')
+
+
+# def download_iris_psfs(
+#     output_dir: str | None = None,
+#     skip_if_exists: bool = True
+# ) -> str:
+#     raise NotImplementedError("IRIS PSF download not implemented yet")
 
 
 def load_iris_psf(
@@ -400,7 +415,7 @@ def load_iris_psf(
     psf, info = _read_iris_psf(filepath, wave=wave)
     info['instrument_mode'] = instrument_mode
     return psf, info
-    
+
 
 def _get_iris_psf_filename(
     instrument_mode : str,

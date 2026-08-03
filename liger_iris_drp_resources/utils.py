@@ -8,6 +8,9 @@ __all__ = [
     'to_little_endian'
 ]
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_resource_dir():
     resource_dir = os.getenv('LIGER_IRIS_DRP_RESOURCE_DIR')
     if resource_dir is None:
@@ -68,8 +71,12 @@ def download(
         download_keck_pupil_image(skip_if_exists=skip_if_exists)
 
     if iris_psfs:
-        from .psfs import download_iris_psfs
-        download_iris_psfs(skip_if_exists=skip_if_exists)
+        logger.warning(
+            "Downloading IRIS PSFs is not yet implemented. Skipping."
+            "To use IRIS PSFs, users must be on the Galactica cluster."
+        )
+        #from .psfs import download_iris_psfs
+        #download_iris_psfs(skip_if_exists=skip_if_exists)
 
     if filter_trans:
         from .filters import download_filter_transmission_curves
