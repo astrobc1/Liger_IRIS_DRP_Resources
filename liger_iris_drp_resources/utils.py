@@ -24,6 +24,7 @@ def download(
     keck_pupil: bool = True,
     iris_psfs: bool = False,
     filter_trans: bool = True,
+    micropupils: bool = True,
     skip_if_exists: bool = True
 ) -> str:
     """
@@ -45,6 +46,9 @@ def download(
         Default is False.
     filter_trans : bool
         Whether to download the filter transmission curves.
+        Default is True.
+    micropupils : bool
+        Whether to download the micropupil files.
         Default is True.
     skip_if_exists : bool
         If True, skip downloading if the output directory already exists and is not empty.
@@ -70,6 +74,10 @@ def download(
     if filter_trans:
         from .filters import download_filter_transmission_curves
         download_filter_transmission_curves(skip_if_exists=skip_if_exists)
+
+    if micropupils:
+        from .micropupils import download_micropupils
+        download_micropupils(skip_if_exists=skip_if_exists)
 
     output_dir = get_resource_dir()
     return output_dir
