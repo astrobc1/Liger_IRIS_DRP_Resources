@@ -55,7 +55,7 @@ docs = ["sphinx==8.1.3", "nbsphinx", "pandoc", "sphinx-multiversion", "sphinxawe
 
 [tool.setuptools]
 packages = ["liger_iris_drp_resources"]
-package-data = {"filters" = ["liger_iris_drp_resources/resources/filters/*"], "gratings" = ["liger_iris_drp_resources/resources/gratings/*"], "throughput" = ["liger_iris_drp_resources/resources/throughput/*"]}
+package-data = {"filters" = ["liger_iris_drp_resources/resources/filters/*"], "gratings" = ["liger_iris_drp_resources/resources/gratings/*"], "throughput" = ["liger_iris_drp_resources/resources/throughput/*"], "micropupils" = ["liger_iris_drp_resources/resources/micropupils/*"]}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
