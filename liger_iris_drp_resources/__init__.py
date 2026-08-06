@@ -16,4 +16,6 @@ from .psfs import *
 from .throughput import *
 from .gratings import *
 from .utils import *
+from .micropupils import *
+from .trace_geometry import *
 from .model_spectra import *

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     'download_micropupils',
-    'load_micropupil_filename_map'
+    'load_micropupil_for_filter'
 ]
 
 def get_micropupil_filename(filter_name : str | None = None) -> dict[str, tuple[np.ndarray, np.ndarray]]:
@@ -134,4 +134,4 @@ def load_micropupil_for_filter(filter_name : str) -> tuple[np.ndarray, np.ndarra
     filename = get_micropupil_filename(filter_name)
     filepath = os.path.join(mp_dir, filename)
     mp = fits.getdata(filepath, ext=0)
-    return mp, filepath
+    return mp

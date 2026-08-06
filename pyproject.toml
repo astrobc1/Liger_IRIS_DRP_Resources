@@ -53,9 +53,12 @@ docs = ["sphinx==8.1.3", "nbsphinx", "pandoc", "sphinx-multiversion", "sphinxawe
 "Documentation" = "https://astrobc1.github.io/liger_iris_drp_resources"
 "Source" = "https://github.com/astrobc1/liger_iris_drp_resources"
 
+#[tool.setuptools]
+# packages = ["liger_iris_drp_resources"]
+# package-data = {"filters" = ["liger_iris_drp_resources/resources/filters/*"], "gratings" = ["liger_iris_drp_resources/resources/gratings/*"], "throughput" = ["liger_iris_drp_resources/resources/throughput/*"], "micropupils" = ["liger_iris_drp_resources/resources/micropupils/*"], "trace_geometry" = ["liger_iris_drp_resources/resources/trace_geometry/*"]}
 [tool.setuptools]
 packages = ["liger_iris_drp_resources"]
-package-data = {"filters" = ["liger_iris_drp_resources/resources/filters/*"], "gratings" = ["liger_iris_drp_resources/resources/gratings/*"], "throughput" = ["liger_iris_drp_resources/resources/throughput/*"], "micropupils" = ["liger_iris_drp_resources/resources/micropupils/*"]}
+package-data = {"liger_iris_drp_resources" = ["resources/**/*"]}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
