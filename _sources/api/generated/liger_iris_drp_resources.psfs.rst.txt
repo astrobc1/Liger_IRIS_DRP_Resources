@@ -1,0 +1,16 @@
+﻿liger\_iris\_drp\_resources.psfs
+================================
+
+.. automodule:: liger_iris_drp_resources.psfs
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      download_keck_pupil_image
+      download_liger_psfs
+      load_iris_psf
+      load_keck_pupil_image
+      load_liger_psf
+   
