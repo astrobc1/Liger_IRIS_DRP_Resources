@@ -59,7 +59,7 @@ def load_ifs_trace_geometry(
     filter_name : str,
     resolution : int,
     shape : tuple[int, int] = (4096, 4096),
-    pixel_size_um : float = 10.0
+    pixel_size_um : float = 15.0
 ) -> tuple[np.ndarray, str]:
     """
     Load the lenslet trace geometry for a given filter and resolution.
@@ -75,7 +75,7 @@ def load_ifs_trace_geometry(
     shape : tuple[int, int], optional
         The shape of the detector, by default (4096, 4096).
     pixel_size_um : float, optional
-        The size of each pixel in micrometers, by default 10.0.
+        The size of each pixel in micrometers, by default 15.0.
     
     Returns
     -------
