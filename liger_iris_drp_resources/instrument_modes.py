@@ -10,6 +10,21 @@ __all__ = [
     'make_iris_modes_table'
 ]
 
+# NOTE: In IRIS ETC, R=10k gratings are not available for slicer mode.
+# NOTE: Here, we make them identical.
+# gratings_lenslet = [
+#     'Z4000', 'Y4000', 'J4000', 'H4000', 'K4000',
+#     'YJ4000', 'HK4000',
+#     'H8000', 'K8000',
+#     'Z10000', 'Y10000', 'J10000', 'H10000', 'K10000',
+# ]
+
+# gratings_slicer = [
+#     'Z4000', 'Y4000', 'J4000', 'H4000', 'K4000',
+#     'YJ4000', 'HK4000',
+#     'H8000', 'K8000'
+# ]
+
 gratings_lenslet = [
     'Z4000', 'Y4000', 'J4000', 'H4000', 'K4000',
     'YJ4000', 'HK4000',
@@ -20,7 +35,8 @@ gratings_lenslet = [
 gratings_slicer = [
     'Z4000', 'Y4000', 'J4000', 'H4000', 'K4000',
     'YJ4000', 'HK4000',
-    'H8000', 'K8000'
+    'H8000', 'K8000',
+    'Z10000', 'Y10000', 'J10000', 'H10000', 'K10000',
 ]
 
 modes = ['IMG', 'IFS']
@@ -250,6 +266,9 @@ def make_liger_modes_table():
         band = grating[0]
         filts = [filt for filt in filter_names_ifs if filt.startswith(band)]
         for filt in filts:
+            # NOTE: Remove narrow band filters from slicer mode R=8,000
+            if filt[1].upper() == 'N' and resolution == 8000:
+                continue
             for plate_scale in plate_scales_slicer:
                 if resolution == 4000:
                     size = (44, 45) if 'bb' in filt else (88, 45)
