@@ -267,7 +267,7 @@ def make_liger_modes_table():
         filts = [filt for filt in filter_names_ifs if filt.startswith(band)]
         for filt in filts:
             # NOTE: Remove narrow band filters from slicer mode R=8,000
-            if len(filt) > 1 and filt[1].upper() == 'N' and resolution == 8000:
+            if len(filt) > 1 and filt[1].upper() == 'N' and resolution in (8000, 10000):
                 continue
             for plate_scale in plate_scales_slicer:
                 if resolution == 4000:
